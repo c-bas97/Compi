@@ -1,0 +1,106 @@
+se hicieron los cambios marcados en el pdf
+mas que todo se toco el parser y el token
+se creo una clase en abstractSyntax (AST) = RepeatCommand
+se agrego createQuinary en TreeVisitor
+se agrego visitRepeatCommand a TreeVisitor
+se agrego visitRepeatCommand a TableVisitor
+se agrego visitRepeatCommand a Encoder (FALTA AGREGAR LA FUNCIONALIDAD A ESTA FUNCION)
+se agrego visitRepeatCommand a Checker (FALTA AGREGAR FUNCIONALIDAD)
+se agrego layoutQuinary en LayoutVisitor
+se agrego visitRepeatCommand en LayoutVisitor
+se modifico proc de single-Declaration (parseSingleDeclaration), pero hay que revisar que se haga el arbol y lo del end
+se modifico en Type-Denoter la regla del Array
+se modifico equals de ArrayTypeDenoter en AST
+se modifico VAR en parseSingleDeclaration para agregar lo que se pedia
+se modifico VarDeclaration agregando otro constructor para la modificacion
+se creo una clase abstracta Proc
+se agrego al parser ProcFunc, pero falta ver si funciona
+se creo la clase ProcFunc en AST
+se agrego la clase al visitor para ProcFunc
+se agrego el objeto en visitor de ProcFunc
+se creo la clase visitProcFunc en TableVisitor ...HAY QUE AGREGARLE LA FUNCIONALIDAD.
+se agrego visitProcFuncs en TreeVisitor
+se agrego visitProcFunc en TreeVisitor
+
+NOTA: REVISAR LO DE PROC ya que el Visitor da problemas.
+
+
+En total se hicieron cambios en las clases TableVisitor - TreeVisitor - ArrayTypeDenoter - Visitor - Parser - Token Y OTRAS MÁS
+Se crearon las clases ProcFunc - ProcFuncs - RepeatCommand
+
+Parser Cambios
+
+- parseTypeDenoter cambiar el case Token.Array por lo que viene en el Parser.java que le envio
+- Eliminar lo comentado del Proc-Func
+- Revisar que el Proc-Func Agregado este igual al que esta en el Parser.java
+- Cambiar el parseCompoundDeclaration por el que esta en el Parser.java
+- Revisar que el parseSingleDeclaration case Token.Var sea el mismo al que viene en el Parser.java
+- Revisar que parseDeclaration este igual al que viene en el Parser.java
+
+
+AST Cambios
+- Agregar DelimitedArrayTypeDenoter.java
+- Agregar VarAssignement
+- Revisar ArrayTypeDenoter
+
+Agregar los 2 anteriores al Visitor
+
+
+
+se modificó el case del IF en Parser
+se agregó el Elsif como método privado dentro del parser.
+modifiqué el Repeat en el parser
+se elimina RepeatCommand de AST
+se agrega un repeatBlabla por cada tipo de Repeat (while, until, doWhile, doUntil, for) al package de AST
+cambios en el visitor del AST
+se agregó el case.Select (funcionalidad)
+Se agregó clase Cases al AST	-	agregas type(?)
+se agregó Cases parseCases() al parser
+agregó parseCase al parser
+agregué parseElseCase al parser
+agregué parseCaseLiterals y parseCaseLiteral a parser
+agregué clase CasesCases, IntegerCases y CharacterCases a AST
+agregué clase CaseCases al AST (revisarla)
+
+
+
+
+------------------Luego de enviarselo a Edward------------------
+
+cambios en el parser (parseCaseLiterals)
+se agrega la clase CaseLiteralsCases al AST
+modificación del Visitor para incluir el .visitCaseLiteralsCases
+
+cambios en el parser (parseElseCase)
+se agrega la clase ElseCases al AST
+modificar el Visitor para incluir el .visitElseCases
+
+cambios en el parser (parseCase)
+se modifica la clase CaseCases en el AST (la creamos pero no se había ajustado)
+modificar el Visitor para incluir el .visitCaseCases
+
+cambios en el parser (parseCases)
+
+cambios en TableVisitor (incluir métodos, principalmente)
+cambios en el SelectCommand (variables publicas)
+cambios de variables publicas en else, cases, case, caseLiterals en esas clases del AST
+clase encoder, se le agregaron los métodos agregados al visitor.
+clase Checker, se le agregaron los métodos agregados al visitor.
+
+
+
+----------------------- 25/9/2018----------------------------
+TreeVisitor: inclusión e implementación de los métodos
+TableVisitor: inclusión e implementación de los métodos
+modificación del parser (parseSingleCommand, repeat for)
+se agrega DeclarationRFC
+se modifica RepeatForCommand
+se modifica Visitor
+modificación al Encoder y Checker
+se modificó Layout
+
+
+
+
+
+
