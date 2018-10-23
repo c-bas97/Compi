@@ -122,7 +122,6 @@ public final class Checker implements Visitor {
     return null;
   }
 
-
   public Object visitCallCommand(CallCommand ast, Object o) {
 
     Declaration binding = (Declaration) ast.I.visit(this, null);
@@ -159,8 +158,11 @@ public final class Checker implements Visitor {
     return null;
   }
   
-  public Object visitRecursiveCommand(RecursiveCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  public Object visitRecursiveCommand(RecursiveCommand ast, Object o) {         //se agrego
+        ast.D1.visit(this, null);
+        ast.D2.visit(this, null);
+        return null;
+      //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
     
   //Se agrega el código para analizar que Exp sea Boolean y Com satisfaga las restricciones contextuales
@@ -366,6 +368,7 @@ public final class Checker implements Visitor {
     return null;
   }
 
+  @Override
   public Object visitConstDeclaration(ConstDeclaration ast, Object o) {
     TypeDenoter eType = (TypeDenoter) ast.E.visit(this, null);
     idTable.enter(ast.I.spelling, ast);
@@ -525,7 +528,7 @@ public final class Checker implements Visitor {
                             ast.I.spelling, ast.position);
     return null;
   }
-
+  
   public Object visitEmptyFormalParameterSequence(EmptyFormalParameterSequence ast, Object o) {
     return null;
   }
@@ -632,7 +635,7 @@ public final class Checker implements Visitor {
                             ast.V.position);
     return null;
   }
-
+  
   public Object visitEmptyActualParameterSequence(EmptyActualParameterSequence ast, Object o) {
     FormalParameterSequence fps = (FormalParameterSequence) o;
     if (! (fps instanceof EmptyFormalParameterSequence))
@@ -799,6 +802,9 @@ public final class Checker implements Visitor {
         ast.variable = false;
       } else if (binding instanceof VarFormalParameter) {
         ast.type = ((VarFormalParameter) binding).T;
+        ast.variable = true;
+      } else if (binding instanceof VarAssignement){
+        ast.type = ((VarAssignement) binding).E1.type;
         ast.variable = true;
       } else
         reporter.reportError ("\"%\" is not a const or var identifier",
@@ -1107,7 +1113,15 @@ public final class Checker implements Visitor {
     
     @Override
     public Object visitVarAssignement(VarAssignement ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        TypeDenoter e1Type = (TypeDenoter) ast.E1.visit(this, null);
+        //ast.I.type = e1Type;
+        
+        idTable.enter (ast.I.spelling, ast);
+        if (ast.duplicated)
+          reporter.reportError ("identifier \"%\" already declared",
+                                ast.I.spelling, ast.position);
+        return null;
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
