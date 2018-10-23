@@ -203,9 +203,11 @@ public final class Checker implements Visitor {
     @Override
     public Object visitSelectCommand(SelectCommand ast, Object o) { //Hay que agregar
         TypeDenoter eType = (TypeDenoter) ast.E.visit(this, null);
-        if (! eType.equals(StdEnvironment.booleanType))
-            reporter.reportError("Boolean expression expected here", "", ast.E.position);
-        ast.C.visit(this, null);
+        TypeDenoter caseType = (TypeDenoter) ast.C.visit(this, null);
+        if (! eType.equals(StdEnvironment.integerType) || !eType.equals(StdEnvironment.charType))
+            reporter.reportError("Integer o Character expression expected here", "", ast.E.position);
+        if (! eType.equals(caseType))
+            reporter.reportError("Incompatible types here", "", ast.position);
         return null;
     }
 
@@ -1016,15 +1018,41 @@ public final class Checker implements Visitor {
   }
 
   
-    //Se agregó lo que hay abajo de acá ----------------------------------------------------------------------------------
+    //Se agregó lo que hay abajo de acá -------------------------------------------------------------------------------------
     //se visita cada componente y luego se evalua que lo que retornaron sea lo esperado/correcto
     @Override
     public Object visitCasesCases(CasesCases ast, Object o) {
-        ast.C1.visit(this, null);       //case+
-        ast.C2.visit(this, null);       //elsecase o nil
-        return null;
+        TypeDenoter caseType = (TypeDenoter) ast.C1.visit(this, null);      //case+
+        ast.C2.visit(this, null);                                           //elsecase o nil
+        ast.type = caseType;
+        return ast.type;
     }
 
+    @Override
+    public Object visitCaseCases(CaseCases ast, Object o) {
+        TypeDenoter caseLType = (TypeDenoter) ast.caseAST.visit(this, null);
+        if (!(caseLType.equals(StdEnvironment.integerType) || caseLType.equals(StdEnvironment.charType)))
+            reporter.reportError("Type error in ", "", ast.caseAST.position);
+        //Command
+        ast.coAST.visit(this, null);
+        ast.type = caseLType;
+        return ast.type;
+    }
+    
+    @Override
+    public Object visitCaseLiteralsCases(CaseLiteralsCases ast, Object o) {
+        TypeDenoter case1Type = (TypeDenoter) ast.C1.visit(this, null);
+        TypeDenoter case2Type = (TypeDenoter) ast.C2.visit(this, null);
+        if (!case1Type.equals(StdEnvironment.integerType) || !case1Type.equals(StdEnvironment.charType))
+            reporter.reportError("Integer or Character Literal expected here", "", ast.C1.position);
+        if (!case2Type.equals(StdEnvironment.integerType) || !case2Type.equals(StdEnvironment.charType))
+            reporter.reportError("Integer or Character Literal expected here", "", ast.C2.position);
+        if (! case1Type.equals(case2Type))
+            reporter.reportError("Incompatible types here", "", ast.position);
+        ast.type = case1Type;
+        return ast.type;
+    }
+    
     @Override
     public Object visitIntegerCases(IntegerCases ast, Object o) {
         return StdEnvironment.integerType;
@@ -1036,32 +1064,16 @@ public final class Checker implements Visitor {
     }
 
     @Override
-    public Object visitCaseLiteralsCases(CaseLiteralsCases ast, Object o) {
-        TypeDenoter case1Type = (TypeDenoter) ast.C1.visit(this, null);
-        TypeDenoter case2Type = (TypeDenoter) ast.C2.visit(this, null);
-        if (!case1Type.equals(StdEnvironment.integerType) || !case1Type.equals(StdEnvironment.charType))
-            reporter.reportError("Integer or Character Literal expected here", "", ast.C1.position);
-        if (!case2Type.equals(StdEnvironment.integerType) || !case2Type.equals(StdEnvironment.charType))
-            reporter.reportError("Integer or Character Literal expected here", "", ast.C2.position);
-        return case1Type;
-    }
-
-    @Override
     public Object visitElseCases(ElseCases ast, Object o) {
         ast.C.visit(this, null);
         return null;
     }
 
     @Override
-    public Object visitCaseCases(CaseCases ast, Object o) {
-        TypeDenoter casesType = (TypeDenoter) ast.caseAST.visit(this, null);
-//        if (!(casesType.equals(StdEnvironment.integerType) || casesType.equals(StdEnvironment.charType)))
-//            reporter.reportError("Error in ", "", ast.caseAST.position);
-        //Command
-        ast.coAST.visit(this, null);
+    public Object visitEmptyCases(EmptyCases ast, Object o) {
         return null;
     }
-
+    
     @Override
     public Object visitVarAssignement(VarAssignement ast, Object o) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -1077,8 +1089,4 @@ public final class Checker implements Visitor {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    @Override
-    public Object visitEmptyCases(EmptyCases ast, Object o) {
-        return null;
-    }
 }
