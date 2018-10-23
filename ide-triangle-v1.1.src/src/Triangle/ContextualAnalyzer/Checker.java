@@ -121,7 +121,6 @@ public final class Checker implements Visitor {
     return null;
   }
 
-
   public Object visitCallCommand(CallCommand ast, Object o) {
 
     Declaration binding = (Declaration) ast.I.visit(this, null);
@@ -158,8 +157,11 @@ public final class Checker implements Visitor {
     return null;
   }
   
-  public Object visitRecursiveCommand(RecursiveCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  public Object visitRecursiveCommand(RecursiveCommand ast, Object o) {         //se agrego
+        ast.D1.visit(this, null);
+        ast.D2.visit(this, null);
+        return null;
+      //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
     
   //Se agrega el código para analizar que Exp sea Boolean y Com satisfaga las restricciones contextuales
