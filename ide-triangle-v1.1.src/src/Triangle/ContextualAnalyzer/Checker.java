@@ -180,18 +180,18 @@ public final class Checker implements Visitor {
   }
 
   public Object visitRepeatDoWhileCommand(RepeatDoWhileCommand ast, Object o) { //Se agrego
+    ast.C.visit(this, null);
     TypeDenoter eType = (TypeDenoter) ast.E.visit(this, null);
     if (!eType.equals(StdEnvironment.booleanType))
         reporter.reportError("Boolean expression expected here", "", ast.E.position);
-    ast.C.visit(this, null);
     return null;
   }
 
   public Object visitRepeatDoUntilCommand(RepeatDoUntilCommand ast, Object o) { //Se agrego
+    ast.C.visit(this, null);
     TypeDenoter eType = (TypeDenoter) ast.E.visit(this, null);
     if (!eType.equals(StdEnvironment.booleanType))
         reporter.reportError("Boolean expression expected here", "", ast.E.position);
-    ast.C.visit(this, null);
     return null;
   }
   
