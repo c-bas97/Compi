@@ -104,6 +104,7 @@ import Triangle.AbstractSyntaxTrees.Visitor;
 import Triangle.AbstractSyntaxTrees.VnameExpression;
 import Triangle.AbstractSyntaxTrees.WhileCommand;
 import Triangle.SyntacticAnalyzer.SourcePosition;
+import java.util.ArrayList;
 
 public final class Checker implements Visitor {
 
@@ -120,7 +121,6 @@ public final class Checker implements Visitor {
       reporter.reportError ("assignment incompatibilty", "", ast.position);
     return null;
   }
-
 
   public Object visitCallCommand(CallCommand ast, Object o) {
 
@@ -158,8 +158,11 @@ public final class Checker implements Visitor {
     return null;
   }
   
-  public Object visitRecursiveCommand(RecursiveCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+  public Object visitRecursiveCommand(RecursiveCommand ast, Object o) {         //se agrego
+        ast.D1.visit(this, null);
+        ast.D2.visit(this, null);
+        return null;
+      //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
     
   //Se agrega el código para analizar que Exp sea Boolean y Com satisfaga las restricciones contextuales
@@ -202,7 +205,20 @@ public final class Checker implements Visitor {
 
     @Override
     public Object visitSelectCommand(SelectCommand ast, Object o) { //Hay que agregar
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        TypeDenoter eType = (TypeDenoter) ast.E.visit(this, null);
+        if (! eType.equals(StdEnvironment.integerType) || !eType.equals(StdEnvironment.charType))
+            reporter.reportError("Integer o Character expression expected here", "", ast.E.position);
+        
+        ArrayList<String> literals = new ArrayList();
+        if (eType.equals(StdEnvironment.integerType)){
+            literals.add("integerType");
+        } else{
+            literals.add("charType");
+        }
+        TypeDenoter caseType = (TypeDenoter) ast.C.visit(this, literals);
+        if (!eType.equals(caseType))
+            reporter.reportError("Incompatible types found here", "", ast.E.position);
+        return null;
     }
 
   public Object visitSequentialCommand(SequentialCommand ast, Object o) {
@@ -352,6 +368,7 @@ public final class Checker implements Visitor {
     return null;
   }
 
+  @Override
   public Object visitConstDeclaration(ConstDeclaration ast, Object o) {
     TypeDenoter eType = (TypeDenoter) ast.E.visit(this, null);
     idTable.enter(ast.I.spelling, ast);
@@ -511,7 +528,7 @@ public final class Checker implements Visitor {
                             ast.I.spelling, ast.position);
     return null;
   }
-
+  
   public Object visitEmptyFormalParameterSequence(EmptyFormalParameterSequence ast, Object o) {
     return null;
   }
@@ -618,7 +635,7 @@ public final class Checker implements Visitor {
                             ast.V.position);
     return null;
   }
-
+  
   public Object visitEmptyActualParameterSequence(EmptyActualParameterSequence ast, Object o) {
     FormalParameterSequence fps = (FormalParameterSequence) o;
     if (! (fps instanceof EmptyFormalParameterSequence))
@@ -785,6 +802,9 @@ public final class Checker implements Visitor {
         ast.variable = false;
       } else if (binding instanceof VarFormalParameter) {
         ast.type = ((VarFormalParameter) binding).T;
+        ast.variable = true;
+      } else if (binding instanceof VarAssignement){
+        ast.type = ((VarAssignement) binding).E1.type;
         ast.variable = true;
       } else
         reporter.reportError ("\"%\" is not a const or var identifier",
@@ -1011,39 +1031,97 @@ public final class Checker implements Visitor {
 
   }
 
+  
+    //Se agregó lo que hay abajo de acá -------------------------------------------------------------------------------------
+    //se visita cada componente y luego se evalua que lo que retornaron sea lo esperado/correcto
     @Override
     public Object visitCasesCases(CasesCases ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitIntegerCases(IntegerCases ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitCharacterCases(CharacterCases ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitCaseLiteralsCases(CaseLiteralsCases ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitElseCases(ElseCases ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        TypeDenoter caseType = (TypeDenoter) ast.C1.visit(this, o);      //case+
+        ast.C2.visit(this, null);                                           //elsecase o nil
+        ast.type = caseType;
+        return ast.type;
     }
 
     @Override
     public Object visitCaseCases(CaseCases ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        TypeDenoter caseLType = (TypeDenoter) ast.caseAST.visit(this, o);
+        if (!(caseLType.equals(StdEnvironment.integerType) || caseLType.equals(StdEnvironment.charType)))
+            reporter.reportError("Type error in ", "", ast.caseAST.position);
+        //Command
+        ast.coAST.visit(this, null);
+        ast.type = caseLType;
+        return ast.type;
+    }
+    
+    @Override
+    public Object visitCaseLiteralsCases(CaseLiteralsCases ast, Object o) {
+        TypeDenoter case1Type = (TypeDenoter) ast.C1.visit(this, o);
+        TypeDenoter case2Type = (TypeDenoter) ast.C2.visit(this, o);
+        ArrayList<String> literals = (ArrayList) o;
+        if (!case1Type.equals(StdEnvironment.integerType) || !case1Type.equals(StdEnvironment.charType))
+            reporter.reportError("Integer or Character Literal expected here", "", ast.C1.position);
+        if (!case2Type.equals(StdEnvironment.integerType) || !case2Type.equals(StdEnvironment.charType))
+            reporter.reportError("Integer or Character Literal expected here", "", ast.C2.position);
+        if (! case1Type.equals(case2Type)){
+            reporter.reportError("Incompatible types here", "", ast.position);
+            if(case1Type.toString().equalsIgnoreCase(literals.get(0)))
+                ast.type = case2Type;
+            else
+                ast.type = case1Type;
+        }
+        else
+            ast.type = case1Type;
+        return ast.type;
+    }
+    
+    @Override
+    public Object visitIntegerCases(IntegerCases ast, Object o) {
+        ArrayList<String> literals = (ArrayList) o;
+        if (literals.get(0).equalsIgnoreCase("charType"))
+            reporter.reportError("Expect Character Literal, found Integer Literal at", "", ast.position);
+        if (literals.contains(ast.IL.spelling))
+            reporter.reportError("Integer literal repeated at", "", ast.position);
+        else
+            literals.add(ast.IL.spelling);
+        ast.type = StdEnvironment.integerType;
+        return ast.type;
     }
 
     @Override
+    public Object visitCharacterCases(CharacterCases ast, Object o) {
+        ArrayList<String> literals = (ArrayList) o;
+        if (literals.get(0).equalsIgnoreCase("integerType"))
+            reporter.reportError("Expect Integer Literal, found Character Literal at", "", ast.position);
+        if (literals.contains(ast.CL.spelling))
+            reporter.reportError("Character literal repeated at", "", ast.position);
+        else
+            literals.add(ast.CL.spelling);
+        ast.type = StdEnvironment.charType;
+        return ast.type;
+    }
+
+    @Override
+    public Object visitElseCases(ElseCases ast, Object o) {
+        ast.C.visit(this, null);
+        return null;
+    }
+
+    @Override
+    public Object visitEmptyCases(EmptyCases ast, Object o) {
+        return null;
+    }
+    
+    @Override
     public Object visitVarAssignement(VarAssignement ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        TypeDenoter e1Type = (TypeDenoter) ast.E1.visit(this, null);
+        //ast.I.type = e1Type;
+        
+        idTable.enter (ast.I.spelling, ast);
+        if (ast.duplicated)
+          reporter.reportError ("identifier \"%\" already declared",
+                                ast.I.spelling, ast.position);
+        return null;
+        //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
@@ -1056,8 +1134,4 @@ public final class Checker implements Visitor {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    @Override
-    public Object visitEmptyCases(EmptyCases ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
 }

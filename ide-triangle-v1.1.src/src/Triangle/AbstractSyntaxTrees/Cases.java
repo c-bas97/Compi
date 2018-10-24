@@ -13,4 +13,5 @@ public abstract class Cases extends AST {
         super(thePosition);
     }
     
+    public TypeDenoter type;
 }
