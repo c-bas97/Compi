@@ -44,7 +44,6 @@ import Triangle.AbstractSyntaxTrees.ConstActualParameter;
 import Triangle.AbstractSyntaxTrees.ConstDeclaration;
 import Triangle.AbstractSyntaxTrees.ConstFormalParameter;
 import Triangle.AbstractSyntaxTrees.Declaration;
-import Triangle.AbstractSyntaxTrees.DeclarationRFC;
 import Triangle.AbstractSyntaxTrees.DelimitedArrayTypeDenoter;
 import Triangle.AbstractSyntaxTrees.DotVname;
 import Triangle.AbstractSyntaxTrees.ElseCases;
@@ -1094,11 +1093,6 @@ public final class Encoder implements Visitor {
 
     @Override
     public Object visitDelimitedArrayTypeDenoter(DelimitedArrayTypeDenoter ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitDeclarationRFC(DeclarationRFC ast, Object o) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

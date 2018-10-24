@@ -36,7 +36,6 @@ import Triangle.AbstractSyntaxTrees.CharacterLiteral;
 import Triangle.AbstractSyntaxTrees.ConstActualParameter;
 import Triangle.AbstractSyntaxTrees.ConstDeclaration;
 import Triangle.AbstractSyntaxTrees.ConstFormalParameter;
-import Triangle.AbstractSyntaxTrees.DeclarationRFC;
 import Triangle.AbstractSyntaxTrees.DelimitedArrayTypeDenoter;
 import Triangle.AbstractSyntaxTrees.DotVname;
 import Triangle.AbstractSyntaxTrees.ElseCases;
@@ -592,11 +591,7 @@ public class LayoutVisitor implements Visitor {
 
     @Override
     public Object visitRepeatForCommand(RepeatForCommand ast, Object o) {
-        return layoutTernary("Rep.ForCom.", ast.D, ast.E, ast.C);
-    }
-    @Override
-    public Object visitDeclarationRFC(DeclarationRFC ast, Object o) {
-        return layoutBinary("Dec.Rep.ForCom.", ast.I, ast.E);
+        return layoutQuaternary("Rep.ForCom.", ast.I, ast.E1, ast.E2, ast.C);
     }
 
     @Override
