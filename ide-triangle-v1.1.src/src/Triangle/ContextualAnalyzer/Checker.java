@@ -158,11 +158,88 @@ public final class Checker implements Visitor {
   }
   
   public Object visitRecursiveCommand(RecursiveCommand ast, Object o) {         //se agrego
-        ast.D1.visit(this, null);
-        ast.D2.visit(this, null);
+        Declaration A1 = ast.D2;
+        Declaration A2;
+        //Visitando primero los identificadores de cada proc-func
+        if (A1 instanceof FuncDeclaration){
+            idTable.enter(((Identifier) ((FuncDeclaration) A1).I).spelling, A1);
+            if (A1.duplicated)
+                reporter.reportError ("identifier \"%\" already declared",((Identifier) ((FuncDeclaration) A1).I).spelling, A1.position);
+        }
+        else{
+            idTable.enter(((Identifier) ((ProcDeclaration) A1).I).spelling, A1);
+            if (A1.duplicated)
+                reporter.reportError ("identifier \"%\" already declared",((Identifier) ((ProcDeclaration) A1).I).spelling, A1.position);
+        }
+      
+        //recorremos el arbol binario de la izquierda
+        A2= ast.D1;
+        while(A2 instanceof RecursiveCommand){
+            A1 = ((RecursiveCommand) A2).D2;
+          
+            if (A1 instanceof FuncDeclaration){
+                idTable.enter(((Identifier) ((FuncDeclaration) A1).I).spelling, A1);
+                if (A1.duplicated)
+                    reporter.reportError ("identifier \"%\" already declared",((Identifier) ((FuncDeclaration) A1).I).spelling, A1.position);
+            }else{
+                idTable.enter(((Identifier) ((ProcDeclaration) A1).I).spelling, A1);
+                if (A1.duplicated)
+                    reporter.reportError ("identifier \"%\" already declared",((Identifier) ((ProcDeclaration) A1).I).spelling, A1.position);
+            }
+            A2= ((RecursiveCommand) A2).D1;          
+        }
+      
+        if (A2 instanceof FuncDeclaration){
+            idTable.enter(((Identifier) ((FuncDeclaration) A2).I).spelling, A2);
+            if (A2.duplicated)
+                reporter.reportError ("identifier \"%\" already declared",((Identifier) ((FuncDeclaration) A2).I).spelling, A2.position);
+        }else{
+            idTable.enter(((Identifier) ((ProcDeclaration) A2).I).spelling, A2);
+            if (A2.duplicated)
+                reporter.reportError ("identifier \"%\" already declared",((Identifier) ((ProcDeclaration) A2).I).spelling, A2.position);
+        }
+      
+        //visitar los proc y func sin reinsertar los identificadores
+        A1 = ast.D2;
+        if (A1 instanceof FuncDeclaration)
+            this.visitFuncDeclarationAux(((FuncDeclaration)A1), null);
+        else
+            this.visitProcDeclarationAux(((ProcDeclaration)A1), null);
+      
+        A2= ast.D1;
+        while(A2 instanceof RecursiveCommand){
+            A1 = ((RecursiveCommand) A2).D2;
+            if (A1 instanceof FuncDeclaration)
+                this.visitFuncDeclarationAux(((FuncDeclaration)A1), null);
+            else
+                this.visitProcDeclarationAux(((ProcDeclaration)A1), null);
+            A2= ((RecursiveCommand) A2).D1;          
+        }
+        if (A2 instanceof FuncDeclaration)
+            this.visitFuncDeclarationAux(((FuncDeclaration)A2), null);
+        else
+            this.visitProcDeclarationAux(((ProcDeclaration)A2), null);
         return null;
-      //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
   }
+  
+    public Object visitProcDeclarationAux(ProcDeclaration ast, Object o) {
+        //se elimina la inserción del identificador a la tabla
+        idTable.openScope();
+        ast.FPS.visit(this, null);
+        ast.C.visit(this, null);
+        idTable.closeScope();
+        return null;
+    }
+    public Object visitFuncDeclarationAux(FuncDeclaration ast, Object o) {
+        ast.T = (TypeDenoter) ast.T.visit(this, null);
+        idTable.openScope();
+        ast.FPS.visit(this, null);
+        TypeDenoter eType = (TypeDenoter) ast.E.visit(this, null);
+        idTable.closeScope();
+        if (! ast.T.equals(eType))
+            reporter.reportError ("Body of function \"%\" has wrong type",ast.I.spelling, ast.E.position);
+        return null;
+    }
     
   //Se agrega el código para analizar que Exp sea Boolean y Com satisfaga las restricciones contextuales
   public Object visitRepeatWhileCommand(RepeatWhileCommand ast, Object o) { //Se agrego
@@ -416,8 +493,7 @@ public final class Checker implements Visitor {
   public Object visitProcDeclaration(ProcDeclaration ast, Object o) {
     idTable.enter (ast.I.spelling, ast); // permits recursion
     if (ast.duplicated)
-      reporter.reportError ("identifier \"%\" already declared",
-                            ast.I.spelling, ast.position);
+      reporter.reportError ("identifier \"%\" already declared",ast.I.spelling, ast.position);
     idTable.openScope();
     ast.FPS.visit(this, null);
     ast.C.visit(this, null);
