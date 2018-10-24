@@ -213,7 +213,7 @@ public final class Checker implements Visitor {
   }
 
     @Override
-    public Object visitSelectCommand(SelectCommand ast, Object o) { //Hay que agregar
+    public Object visitSelectCommand(SelectCommand ast, Object o) { //Se agrego
         TypeDenoter eType = (TypeDenoter) ast.E.visit(this, null);
         if (! eType.equals(StdEnvironment.integerType) || !eType.equals(StdEnvironment.charType))
             reporter.reportError("Integer o Character expression expected here", "", ast.E.position);
@@ -699,6 +699,16 @@ public final class Checker implements Visitor {
   public Object visitCharTypeDenoter(CharTypeDenoter ast, Object o) {
     return StdEnvironment.charType;
   }
+  
+    public Object visitDelimitedArrayTypeDenoter(DelimitedArrayTypeDenoter ast, Object o) { //Se agrego
+        ast.T = (TypeDenoter) ast.T.visit(this, null);
+        if ((Integer.valueOf(ast.IL1.spelling).intValue()) == 0)
+          reporter.reportError ("arrays must not be empty", "", ast.IL1.position);
+        if ((Integer.valueOf(ast.IL1.spelling).intValue()) >= 
+            (Integer.valueOf(ast.IL2.spelling).intValue()))
+          reporter.reportError ("second index must be greater than the first one", "", ast.IL1.position);
+        return ast;        
+    } 
 
   public Object visitErrorTypeDenoter(ErrorTypeDenoter ast, Object o) {
     return StdEnvironment.errorType;
@@ -1135,10 +1145,5 @@ public final class Checker implements Visitor {
                                 ast.I.spelling, ast.position);
         return null;
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitDelimitedArrayTypeDenoter(DelimitedArrayTypeDenoter ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }    
+    }   
 }
