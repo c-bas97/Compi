@@ -200,7 +200,7 @@ public final class Checker implements Visitor {
   public Object visitRepeatForCommand(RepeatForCommand ast, Object o) { //Se agrego
     TypeDenoter e1Type = (TypeDenoter) ast.E1.visit(this, null);
     TypeDenoter e2Type = (TypeDenoter) ast.E2.visit(this, null);
-    if (!e1Type.equals(StdEnvironment.integerType)) //Para revisar que la expresion es de tipo entero
+    if (!e1Type.equals(StdEnvironment.integerType)) 
       reporter.reportError("Integer expression expected here", "", ast.E1.position);
     if (!e2Type.equals(StdEnvironment.integerType))
       reporter.reportError("Integer expression expected here", "", ast.E2.position);
