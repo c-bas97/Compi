@@ -104,5 +104,13 @@ public final class IdentificationTable {
 
     return attr;
   }
+  
+  public void setLevelOfLastEntry(int level){
+      this.latest.setLevel(level);
+  }
+  
+  public int getLevelOfLastEntry(){
+      return this.latest.level;
+  }
 
 }

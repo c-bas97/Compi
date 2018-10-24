@@ -406,9 +406,12 @@ public final class Checker implements Visitor {
   
   //Se exportan los identificadores declarados en D2.
   public Object visitLocalDeclaration(LocalDeclaration ast, Object o) { //Se agrego
-    ast.D1.visit(this, null);
-    ast.D2.visit(this, null);
-    return null;
+        idTable.openScope();
+        ast.D1.visit(this, null);
+        ast.D2.visit(this, null);
+        idTable.setLevelOfLastEntry(idTable.getLevelOfLastEntry()-1);
+        idTable.closeScope();
+        return null;
   }
 
   public Object visitProcDeclaration(ProcDeclaration ast, Object o) {
@@ -735,6 +738,7 @@ public final class Checker implements Visitor {
     return ast;
   }
 
+  
   // Literals, Identifiers and Operators
   public Object visitCharacterLiteral(CharacterLiteral CL, Object o) {
     return StdEnvironment.charType;
