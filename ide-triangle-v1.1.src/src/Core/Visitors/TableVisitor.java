@@ -25,7 +25,6 @@ import Triangle.AbstractSyntaxTrees.Command;
 import Triangle.AbstractSyntaxTrees.ConstActualParameter;
 import Triangle.AbstractSyntaxTrees.ConstDeclaration;
 import Triangle.AbstractSyntaxTrees.ConstFormalParameter;
-import Triangle.AbstractSyntaxTrees.DeclarationRFC;
 import Triangle.AbstractSyntaxTrees.DelimitedArrayTypeDenoter;
 import Triangle.AbstractSyntaxTrees.DotVname;
 import Triangle.AbstractSyntaxTrees.ElseCases;
@@ -208,16 +207,11 @@ public class TableVisitor implements Visitor {
 
     @Override
     public Object visitRepeatForCommand(RepeatForCommand ast, Object o) {
-        ast.D.visit(this, null);
-        ast.E.visit(this, null);
+        ast.I.visit(this, null);
+        ast.E1.visit(this, null);
+        ast.E2.visit(this, null);
         ast.C.visit(this, null);
         return (null);
-    }
-    @Override
-    public Object visitDeclarationRFC(DeclarationRFC ast, Object o) {
-        ast.I.visit(this, null);
-        ast.E.visit(this, null);
-        return(null);
     }
 
     @Override

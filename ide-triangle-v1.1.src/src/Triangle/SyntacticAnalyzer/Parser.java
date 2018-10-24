@@ -397,16 +397,14 @@ public class Parser {
                     Identifier iAST = parseIdentifier();
                     accept(Token.FROM);
                     Expression eAST1 = parseExpression();
-                    
-                    DeclarationRFC decRFC = new DeclarationRFC(iAST, eAST1, commandPos);
-                    
+                    //DeclarationRFC decRFC = new DeclarationRFC(iAST, eAST1, commandPos);
                     accept(Token.TO);
                     Expression eAST2 = parseExpression();
                     accept(Token.DO);
                     Command cAST = parseCommand();
                     accept(Token.END);
                     finish(commandPos);
-                    commandAST = new RepeatForCommand(decRFC, eAST2, cAST, commandPos);
+                    commandAST = new RepeatForCommand(iAST, eAST1, eAST2, cAST, commandPos);
                     break;
                 }
         }

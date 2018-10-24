@@ -9,18 +9,19 @@ import Triangle.SyntacticAnalyzer.SourcePosition;
 
 public class RepeatForCommand extends Command{
     
-    public RepeatForCommand(DeclarationRFC dec, Expression e2AST, Command cAST, SourcePosition thePosition){
+    public RepeatForCommand(Identifier iAST, Expression e1AST, Expression e2AST, Command cAST, SourcePosition thePosition){
     super (thePosition);
-    D = dec;
-    E = e2AST;
+    I = iAST;
+    E1 = e1AST;
+    E2 = e2AST;
     C = cAST;
     }
 
     public Object visit(Visitor v, Object o) {
         return v.visitRepeatForCommand(this, o);
     }
-    
-  public Expression E;
+  
+  public Identifier I;
+  public Expression E1, E2;
   public Command C;
-  public Declaration D;
 }

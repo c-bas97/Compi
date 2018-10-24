@@ -29,7 +29,6 @@ public interface Visitor {
   public abstract Object visitRepeatDoWhileCommand(RepeatDoWhileCommand ast, Object o);
   public abstract Object visitRepeatDoUntilCommand(RepeatDoUntilCommand ast, Object o);
   public abstract Object visitRepeatForCommand(RepeatForCommand ast, Object o);
-  public abstract Object visitDeclarationRFC(DeclarationRFC ast, Object o);
   public abstract Object visitSelectCommand(SelectCommand ast, Object o);
   public abstract Object visitCasesCases(CasesCases ast, Object o);
   public abstract Object visitIntegerCases(IntegerCases ast, Object o);
