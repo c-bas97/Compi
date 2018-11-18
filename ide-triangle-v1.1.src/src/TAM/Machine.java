@@ -45,6 +45,7 @@ public final class Machine {
     CALLop = 6,
     CALLIop = 7,
     RETURNop = 8,
+    IOOBop = 9, //Se agrego (operador de error para indice inválido)
     PUSHop = 10,
     POPop = 11,
     JUMPop = 12,

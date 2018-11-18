@@ -126,7 +126,7 @@ public final class Encoder implements Visitor {
     return null;
   }
 
-  public Object visitEmptyCommand(EmptyCommand ast, Object o) {
+  public Object visitNilCommand(EmptyCommand ast, Object o) { //Se cambio el nombre por NilCommand
     return null;
   }
 
@@ -154,6 +154,89 @@ public final class Encoder implements Visitor {
       emit(Machine.POPop, 0, 0, extraSize);
     return null;
   }
+  
+    /* **************************************************
+    Se agregan las funciones para generar código de los comandos:
+    - repeat for Id from Exp1 to Exp2 do Com end
+    - repeat while E do C end
+    - repeat until E do C end
+    - repeat do C while E end
+    - repeat do C until E end
+  **************************************************  */
+  /*--------------------------------------------------------------------*/
+  public Object visitRepeatForCommand(RepeatForCommand ast, Object o){
+    Frame frame = (Frame) o;
+    int jumpAddr, loopAddr;
+    
+    ast.E2.visit(this, frame);
+    ast.E1.visit(this, frame);
+    jumpAddr = nextInstrAddr;
+    emit(Machine.JUMPop, 0, Machine.CBr, 0);
+    loopAddr = nextInstrAddr;
+    ast.C.visit(this, new Frame(frame, 2));
+    emit(Machine.LOADop, 1, displayRegister(frame.level, frame.level), frame.size + 1);
+    emit(Machine.CALLop, Machine.SBr, Machine.PBr, Machine.succDisplacement);
+    emit(Machine.STOREop, 1, displayRegister(frame.level, frame.level), frame.size + 1);
+    patch(jumpAddr, nextInstrAddr);
+    emit(Machine.LOADop, 1, displayRegister(frame.level, frame.level), frame.size + 1);
+    emit(Machine.LOADop, 1, displayRegister(frame.level, frame.level), frame.size);
+    emit(Machine.CALLop, Machine.SBr, Machine.PBr, Machine.leDisplacement);
+    emit(Machine.JUMPIFop, Machine.trueRep, Machine.CBr, loopAddr);
+    emit(Machine.POPop, 0, 0, 2);
+    return null;  
+  }
+  
+  public Object visitRepeatWhileCommand(RepeatWhileCommand ast, Object o){
+    Frame frame = (Frame) o;
+    int jumpAddr, loopAddr;
+
+    jumpAddr = nextInstrAddr;
+    emit(Machine.JUMPop, 0, Machine.CBr, 0);
+    loopAddr = nextInstrAddr;
+    ast.C.visit(this, frame);
+    patch(jumpAddr, nextInstrAddr);
+    ast.E.visit(this, frame);
+    emit(Machine.JUMPIFop, Machine.trueRep, Machine.CBr, loopAddr);
+    return null;
+  }
+  
+  public Object visitRepeatUntilCommand(RepeatUntilCommand ast, Object o){
+    Frame frame = (Frame) o;
+    int jumpAddr, loopAddr;
+
+    jumpAddr = nextInstrAddr;
+    emit(Machine.JUMPop, 0, Machine.CBr, 0);
+    loopAddr = nextInstrAddr;
+    ast.C.visit(this, frame);
+    patch(jumpAddr, nextInstrAddr);
+    ast.E.visit(this, frame);
+    emit(Machine.JUMPIFop, Machine.falseRep, Machine.CBr, loopAddr);
+    return null;
+  }
+  
+  public Object visitRepeatDoWhileCommand(RepeatDoWhileCommand ast, Object o){
+    Frame frame = (Frame) o;
+    int loopAddr;
+    
+    loopAddr = nextInstrAddr;
+    ast.C.visit(this, frame);
+    ast.E.visit(this, frame);
+    emit(Machine.JUMPIFop, Machine.trueRep, Machine.CBr, loopAddr);
+    return null;
+  }
+  
+  public Object visitRepeatDoUntilCommand(RepeatDoUntilCommand ast, Object o){
+    Frame frame = (Frame) o;
+    int loopAddr;
+    
+    loopAddr = nextInstrAddr;
+    ast.C.visit(this, frame);
+    ast.E.visit(this, frame);
+    emit(Machine.JUMPIFop, Machine.falseRep, Machine.CBr, loopAddr);
+    return null;
+  }
+  
+  /*--------------------------------------------------------------------*/
 
   public Object visitSequentialCommand(SequentialCommand ast, Object o) {
     ast.C1.visit(this, o);
@@ -702,15 +785,43 @@ public final class Encoder implements Visitor {
   public Object visitSubscriptVname(SubscriptVname ast, Object o) {
     Frame frame = (Frame) o;
     RuntimeEntity baseObject;
-    int elemSize, indexSize;
+    int elemSize, indexSize, errorAddress1, errorAddress2, afterAddress, inf, sup;
 
     baseObject = (RuntimeEntity) ast.V.visit(this, frame);
     ast.offset = ast.V.offset;
     ast.indexed = ast.V.indexed;
     elemSize = ((Integer) ast.type.visit(this, null)).intValue();
+    if (ast.V.type instanceof ArrayTypeDenoter){
+      inf = 0;
+      sup = Integer.parseInt(((ArrayTypeDenoter)ast.V.type).IL.spelling) - 1;
+    }
+    else{
+      inf = Integer.parseInt(((DelimitedArrayTypeDenoter)ast.V.type).IL1.spelling);
+      sup = Integer.parseInt(((DelimitedArrayTypeDenoter)ast.V.type).IL2.spelling);
+    }
     if (ast.E instanceof IntegerExpression) {
       IntegerLiteral IL = ((IntegerExpression) ast.E).IL;
       ast.offset = ast.offset + Integer.parseInt(IL.spelling) * elemSize;
+      //Carga el índice, la cota inferior, las compara y si falla, acaba la ejecución
+      ast.E.visit(this, frame); 
+      emit(Machine.LOADLop, 0, 0, inf);
+      emit(Machine.CALLop, Machine.SBr, Machine.PBr, Machine.ltDisplacement);
+      errorAddress1 = nextInstrAddr;
+      emit(Machine.JUMPIFop, Machine.trueRep, Machine.CBr, 0);
+      // Carga el índice, la cota superior, las compara y si falla, acaba la ejecución
+      ast.E.visit(this, frame);
+      emit(Machine.LOADLop, 0, 0, sup);
+      emit(Machine.CALLop, Machine.SBr, Machine.PBr, Machine.gtDisplacement);
+      errorAddress2 = nextInstrAddr;
+      emit(Machine.JUMPIFop, Machine.trueRep, Machine.CBr, 0);
+      afterAddress = nextInstrAddr;
+      emit(Machine.JUMPop, 0, Machine.CBr, 0);
+      //Parcha las direcciones de error de los comandos anteriores
+      patch(errorAddress1, nextInstrAddr);
+      patch(errorAddress2, nextInstrAddr);
+      //Emite el comando de error
+      emit(Machine.IOOBop, 0, 0, 0);   
+      patch(afterAddress, nextInstrAddr);
     } else {
       // v-name is indexed by a proper expression, not a literal
       if (ast.indexed)
@@ -725,11 +836,30 @@ public final class Encoder implements Visitor {
         emit(Machine.CALLop, Machine.SBr, Machine.PBr, Machine.addDisplacement);
       else
         ast.indexed = true;
+      //Carga el índice, la cota inferior, las compara y si falla, acaba la ejecución
+      emit(Machine.LOADop, 1, Machine.STr, -1);
+      emit(Machine.LOADLop, 0, 0, inf);
+      emit(Machine.CALLop, Machine.SBr, Machine.PBr, Machine.ltDisplacement);
+      errorAddress1 = nextInstrAddr;
+      emit(Machine.JUMPIFop, Machine.trueRep, Machine.CBr, 0);
+      //Carga el índice, la cota superior, las compara y si falla, acaba la ejecución
+      emit(Machine.LOADop, 1, Machine.STr, -1);
+      emit(Machine.LOADLop, 0, 0, sup);
+      emit(Machine.CALLop, Machine.SBr, Machine.PBr, Machine.gtDisplacement);
+      errorAddress2 = nextInstrAddr;
+      emit(Machine.JUMPIFop, Machine.trueRep, Machine.CBr, 0); 
+      afterAddress = nextInstrAddr;
+      emit(Machine.JUMPop, 0, Machine.CBr, 0);
+      //Parcha las direcciones de error de los comandos anteriores
+      patch(errorAddress1, nextInstrAddr);
+      patch(errorAddress2, nextInstrAddr);
+      //Emite el comando de error
+      emit(Machine.IOOBop, 0, 0, 0);
+      patch(afterAddress, nextInstrAddr);
     }
     return baseObject;
   }
-
-
+  
   // Programs
   public Object visitProgram(Program ast, Object o) {
     return ast.C.visit(this, o);
@@ -1022,31 +1152,6 @@ public final class Encoder implements Visitor {
     }
 
     @Override
-    public Object visitRepeatWhileCommand(RepeatWhileCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitRepeatUntilCommand(RepeatUntilCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitRepeatDoWhileCommand(RepeatDoWhileCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitRepeatDoUntilCommand(RepeatDoUntilCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitRepeatForCommand(RepeatForCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
     public Object visitSelectCommand(SelectCommand ast, Object o) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -1093,11 +1198,24 @@ public final class Encoder implements Visitor {
 
     @Override
     public Object visitDelimitedArrayTypeDenoter(DelimitedArrayTypeDenoter ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int typeSize;
+        if (ast.entity == null) {
+        int elemSize = ((Integer) ast.T.visit(this, null)).intValue();
+        typeSize = (Integer.parseInt(ast.IL2.spelling) + 1) * elemSize;
+        ast.entity = new TypeRepresentation(typeSize);
+        writeTableDetails(ast);
+        } else
+          typeSize = ast.entity.size;
+        return new Integer(typeSize);
     }
     
     @Override
     public Object visitEmptyCases(EmptyCases ast, Object o) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public Object visitEmptyCommand(EmptyCommand ast, Object o) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

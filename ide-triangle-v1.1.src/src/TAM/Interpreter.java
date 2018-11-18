@@ -44,7 +44,7 @@ public class Interpreter {
   final static int
     running = 0, halted = 1, failedDataStoreFull = 2, failedInvalidCodeAddress = 3,
     failedInvalidInstruction = 4, failedOverflow = 5, failedZeroDivide = 6,
-    failedIOError = 7;
+    failedIOError = 7, indexOutOfBounds = 8; //Se agrego el 8
 
   static long
     accumulator;
@@ -569,6 +569,9 @@ public class Interpreter {
           break;
         case Machine.HALTop:
           status = halted;
+          break;
+        case Machine.IOOBop: //indice fuera del rango de acceso del array
+          status = indexOutOfBounds;
           break;
       }
       if ((CP < CB) || (CP >= CT))
