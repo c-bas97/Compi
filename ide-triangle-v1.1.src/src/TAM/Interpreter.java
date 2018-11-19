@@ -206,6 +206,9 @@ public class Interpreter {
       case failedIOError:
         System.out.println("Program has failed due to an IO error.");
         break;
+      case indexOutOfBounds: //Caso de quue el índice se encuentre fuera del rango de acceso del array (marca un error de ejeccución)
+        System.out.println("Program has failed due to an index out of bounds error.");
+        break;
     }
     if (status != halted)
       dump();

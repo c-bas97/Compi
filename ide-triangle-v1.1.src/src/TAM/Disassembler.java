@@ -321,7 +321,8 @@ public class Disassembler {
         writeD(instr.d);
         writeR('[', instr.r, ']');
         break;
-
+      
+      case Machine.IOOBop: //caso en que caiga en IOO error
       case Machine.HALTop:
         System.out.print ("HALT  ");
     }
