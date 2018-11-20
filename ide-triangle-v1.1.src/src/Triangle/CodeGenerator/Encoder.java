@@ -10,6 +10,8 @@
  * This software is provided free for educational use only. It may
  * not be used for commercial purposes without the prior written permission
  * of the authors.
+
+
  */
 
 package Triangle.CodeGenerator;
@@ -1148,7 +1150,24 @@ public final class Encoder implements Visitor {
   //Métodos agregados
     @Override
     public Object visitRecursiveCommand(RecursiveCommand ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Frame frame = (Frame) o;
+        int recAddr = nextInstrAddr;
+
+        //Se evalua el recursive, teniendo en cuenta que los saltos hacia adelante serán desconocidos
+        ast.D1.visit(this, frame);
+        ast.D2.visit(this, frame);
+        nextInstrAddr  = recAddr;
+
+        //Se evalua de nuevo, pues ahora ya tendremos las direcciones de los saltos hacia adelante
+        ast.D1.visit(this, frame);
+        ast.D2.visit(this, frame);
+        nextInstrAddr  = recAddr;
+
+        //Se evalua una vez más, ahora con las direcciones y saltos corregidos
+        ast.D1.visit(this, frame);
+        ast.D2.visit(this, frame);
+        //toda funcion y procedimiento retorna 0;
+        return new Integer(0);
     }
 
     @Override
