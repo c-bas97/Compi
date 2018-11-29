@@ -126,7 +126,7 @@ public final class Encoder implements Visitor {
     return null;
   }
 
-  public Object visitNilCommand(EmptyCommand ast, Object o) { //Se cambio el nombre por NilCommand
+  public Object visitEmptyCommand(EmptyCommand ast, Object o) { 
     return null;
   }
 
@@ -1188,12 +1188,28 @@ public final class Encoder implements Visitor {
 
     @Override
     public Object visitVarAssignement(VarAssignement ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Frame frame = (Frame) o;
+        int extraSize;
+
+        extraSize = ((Integer) ast.E1.visit(this, frame)).intValue();
+        ast.entity = new KnownAddress(Machine.addressSize, frame.level, frame.size);
+
+        writeTableDetails(ast);
+        return new Integer(extraSize);
+
     }
 
     @Override
     public Object visitLocalDeclaration(LocalDeclaration ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Frame frame = (Frame) o;
+        int extraSize1, extraSize2;
+        
+        extraSize1 = ((Integer) ast.D1.visit(this, frame)).intValue();
+
+        Frame frame1 = new Frame (frame, extraSize1);
+            extraSize2 = ((Integer) ast.D2.visit(this, frame1)).intValue();
+        return new Integer(extraSize1 + extraSize2);
+
     }
 
     @Override
@@ -1211,11 +1227,6 @@ public final class Encoder implements Visitor {
     
     @Override
     public Object visitEmptyCases(EmptyCases ast, Object o) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public Object visitEmptyCommand(EmptyCommand ast, Object o) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
